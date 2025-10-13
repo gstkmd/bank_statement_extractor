@@ -25,9 +25,22 @@ ocr:
     Credit: [1643, 2052]  # X range for credit/deposit column
     Debit: [2052, 2470]   # X range for debit/withdrawal column
   
+  # Transaction table headers (adjust for your bank's statement format)
+  headers:
+    date: "DATE"                    # Date column header
+    activity_description: "ACTIVITY DESCRIPTION"  # Description column header
+    deposits: "DEPOSITS"            # Deposits/Credit column header
+    withdrawal: "WITHDRAWAL"        # Withdrawal/Debit column header
+  
   # OCR settings
   dpi: 300              # Image DPI for OCR processing
   row_tolerance: 5      # Pixel tolerance for grouping words into rows
+
+# Text extraction keywords (adjust for your bank's statement format)
+text_extraction:
+  transaction_start: "transaction detail"    # Text that marks start of transaction section
+  transaction_end: "ending balance"          # Text that marks end of transaction section
+  skip_keywords: ["beginning balance"]       # Keywords to skip when processing transactions
 
 categories:
   "YOUR KEYWORD": "Your Category"

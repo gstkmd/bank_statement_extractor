@@ -26,9 +26,10 @@ def process_page_with_ocr(page, page_num, statement_year):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         quick_text = pytesseract.image_to_string(gray)
         
-        # Check for transaction table headers
-        if not ("Date" in quick_text and "Activity Description" in quick_text and 
-                ("Deposits" in quick_text or "Withdrawal" in quick_text)):
+        # Check for transaction table headers using config
+        headers = ocr_config['headers']
+        if not (headers['date'] in quick_text and headers['activity_description'] in quick_text and 
+                (headers['deposits'] in quick_text or headers['withdrawal'] in quick_text)):
             return []  # Skip this page - no transaction data
     
     # Render PDF page as image
@@ -83,9 +84,10 @@ def process_page_with_ocr(page, page_num, statement_year):
                         row_data[col] = text
                     break
         
-        # Skip header rows
-        if (row_data['Date'].upper() == 'DATE' and 
-            'DESCRIPTION' in row_data['Description'].upper()):
+        # Skip header rows using config
+        headers = ocr_config['headers']
+        if (row_data['Date'].upper() == headers['date'] and 
+            headers['activity_description'].split()[1] in row_data['Description'].upper()):  # Check for "DESCRIPTION" part
             continue
             
         if any(row_data[col] for col in ['Date', 'Description', 'Credit', 'Debit']):
@@ -107,16 +109,17 @@ def process_page_with_ocr(page, page_num, statement_year):
             current_row['Description'] += ' ' + data[i + 1]['Description']
             i += 1
         
-        # Move non-dollar text from Credit/Debit to Description
+        # Move non-dollar text from Credit/Debit to Description using config
+        headers = ocr_config['headers']
         if (current_row['Credit'] and not current_row['Credit'].startswith('$') and 
-            'DEPOSIT' not in current_row['Credit'].upper() and
-            'WITHDRAWAL' not in current_row['Credit'].upper()):
+            headers['deposits'] not in current_row['Credit'].upper() and
+            headers['withdrawal'] not in current_row['Credit'].upper()):
             current_row['Description'] += ' ' + current_row['Credit']
             current_row['Credit'] = ''
         
         if (current_row['Debit'] and not current_row['Debit'].startswith('$') and
-            'DEPOSIT' not in current_row['Debit'].upper() and
-            'WITHDRAWAL' not in current_row['Debit'].upper()):
+            headers['deposits'] not in current_row['Debit'].upper() and
+            headers['withdrawal'] not in current_row['Debit'].upper()):
             current_row['Description'] += ' ' + current_row['Debit']
             current_row['Debit'] = ''
         

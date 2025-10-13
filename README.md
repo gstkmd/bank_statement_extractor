@@ -97,8 +97,29 @@ categories:
   "UBER": "Transportation"
 ```
 
-### OCR Coordinate Configuration
-For different bank layouts, adjust OCR X-coordinates in `config.yml`:
+### Text Extraction Configuration
+For different bank statement formats, adjust text extraction keywords:
+```yaml
+text_extraction:
+  transaction_start: "account activity"     # Your bank's transaction section header
+  transaction_end: "current balance"        # Your bank's balance section
+  skip_keywords: ["previous balance", "beginning balance", "interest paid"]
+```
+
+### OCR Configuration
+For different bank layouts and formats, adjust OCR settings:
+
+**Transaction Headers** (for different bank formats):
+```yaml
+ocr:
+  headers:
+    date: "DATE"
+    activity_description: "DESCRIPTION"     # Some banks use just "DESCRIPTION"
+    deposits: "CREDITS"                     # Some banks use "CREDITS" instead of "DEPOSITS"
+    withdrawal: "DEBITS"                    # Some banks use "DEBITS" instead of "WITHDRAWAL"
+```
+
+**Coordinate Configuration** (for different PDF layouts):
 ```yaml
 ocr:
   x_ranges:
@@ -117,8 +138,10 @@ ocr:
 ## Troubleshooting
 
 ### No transactions extracted
-- Check if PDF contains "Transaction Detail" (for Text based) or "Activity Description" (for OCR) sections
+- **Text-based PDFs**: Check if PDF contains the configured `transaction_start` keyword (default: "transaction detail")
+- **Image-based PDFs**: Check if PDF contains the configured OCR headers (default: "DATE", "ACTIVITY DESCRIPTION", "DEPOSITS"/"WITHDRAWAL")
 - Verify PDF files are in the `data/statements/` directory
+- Adjust the `text_extraction` or `ocr.headers` configuration for your bank's format
 - For debugging, you can run the specific extraction methods manually:
   - `python src/extract_pdf_text.py` (for text-based PDFs)
   - `python src/extract_pdf_ocr.py` (for image-based PDFs)
@@ -130,9 +153,11 @@ ocr:
 
 ### OCR-specific issues
 - **Slow processing**: OCR is inherently slower than text extraction
-- **Missing data**: Check Y-coordinate filtering in the OCR script
+- **Missing data**: Check Y-coordinate filtering settings (`page_1_y_start/end`, `page_3_y_start/end`)
+- **Wrong headers detected**: Adjust `ocr.headers` configuration for your bank's format
 - **Garbled text**: Try adjusting OCR DPI settings (currently 300)
-- **Incorrect data**: See OCR  X-Coordinate Configuration above
+- **Incorrect data**: See OCR Coordinate Configuration above
+- **Page 3 not processed**: Verify your bank uses the configured header format in the OCR headers section
 
 ### Configuration issues
 - If you changed the csv_headers at all, you might need to re-map any new fields in the .py files
@@ -145,9 +170,10 @@ conda install -c conda-forge tesseract-data-eng
 ```
 
 ## Future updates
+- ✅ **Configurable transaction headers** - Now implemented for both text and OCR extraction
+- ✅ **Configurable text extraction keywords** - Now implemented for different bank formats
 - Dynamic OCR coordinate recognition (X and Y)
 - Dynamic CSV Header generation based on transaction content
-- Dynamic page skipping when transaction data is not present
 - Better date parsing
 
 ## Privacy & Security

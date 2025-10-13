@@ -9,11 +9,14 @@ MONTH_START = re.compile(r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)
 
 def extract_transactions_from_text(text, statement_year):
     """Extract transactions from text content."""
-    if "transaction detail" not in text.lower():
+    config = get_config()
+    text_config = config['text_extraction']
+    
+    if text_config['transaction_start'] not in text.lower():
         return []
     
     lines = text.splitlines()
-    start = next((i + 1 for i, l in enumerate(lines) if "transaction detail" in l.lower()), None)
+    start = next((i + 1 for i, l in enumerate(lines) if text_config['transaction_start'] in l.lower()), None)
     if not start:
         return []
     
@@ -22,7 +25,7 @@ def extract_transactions_from_text(text, statement_year):
     
     while i < len(lines):
         line = lines[i]
-        if "ending balance" in line.lower():
+        if text_config['transaction_end'] in line.lower():
             break
             
         # Trim QR code noise from line start
@@ -36,7 +39,7 @@ def extract_transactions_from_text(text, statement_year):
             continue
             
         date_str, desc, amt = m.groups()
-        if "beginning balance" in desc.lower():
+        if any(keyword in desc.lower() for keyword in text_config['skip_keywords']):
             i += 1
             continue
         
@@ -45,7 +48,7 @@ def extract_transactions_from_text(text, statement_year):
         j = i + 1
         while j < len(lines):
             nxt = lines[j].strip()
-            if not nxt or MONTH_START.search(nxt) or "transaction detail" in nxt.lower():
+            if not nxt or MONTH_START.search(nxt) or text_config['transaction_start'] in nxt.lower():
                 break
             if len(nxt) > 15 and nxt.count(' ') == 0 and re.match(r'^[A-Z0-9]+$', nxt):
                 j += 1
