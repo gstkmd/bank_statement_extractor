@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PII Anonymizer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div id="login-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 40px; text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <h1 style="margin-bottom: 5px; font-size: 2.2rem;">Shield<span class="highlight">Docs</span></h1>
+            <h3 id="login-title" style="color: #ef4444; margin-bottom: 10px; font-weight: 600;">Trial Limit Reached</h3>
+            <p id="login-subtitle" style="color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem;">You have exhausted your 50 free OCR scans. Please log in to continue using the software.</p>
+            
+            <button id="btn-google-login" class="action-btn" style="width: 100%; background: var(--bg-card); border: 1px solid var(--input-border); color: var(--text-main); font-size: 1.1rem; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </button>
+            <button id="btn-cancel-login" style="display: none; width: 100%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-bottom: 20px;">Cancel Login</button>
+            
+            <p style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">Need help? Contact CA Ajay Gill</p>
+        </div>
+    </div>
+
+    <!-- EULA Overlay -->
+    <div id="eula-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 600px; padding: 40px; text-align: left; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-height: 90vh; display: flex; flex-direction: column;">
+            <h2 style="margin-bottom: 15px; font-size: 1.8rem; text-align: center;">Shield<span class="highlight">Docs</span> License Agreement</h2>
+            
+            <div style="flex: 1; overflow-y: auto; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 20px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                <p style="margin-top: 0;"><strong>TERMS OF SERVICE AND DISCLAIMER OF LIABILITY</strong></p>
+                <p>By using ShieldDocs, you agree to the following terms:</p>
+                <p><strong>1. Tool Assistance, Not a Guarantee:</strong> ShieldDocs utilizes automated algorithms and Artificial Intelligence to assist in identifying and redacting Personally Identifiable Information (PII). While highly advanced, no automated system is 100% accurate.</p>
+                <p><strong>2. User Responsibility:</strong> You, the user, acknowledge that ShieldDocs is an assistive tool. The final responsibility to review all documents and ensure that all sensitive data is properly redacted lies entirely with you. You must manually verify the output before sharing any document.</p>
+                <p><strong>3. Limitation of Liability:</strong> Under no circumstances shall CA Ajay Gill or the creators of ShieldDocs be held liable for any data leaks, privacy violations, financial losses, or legal damages resulting from unredacted information missed by the software.</p>
+                <p><strong>4. Local Processing:</strong> ShieldDocs processes documents entirely on your local machine to protect data privacy. However, if you choose to use the "AI Reply Hub", you consent to sending the heavily redacted (dummy) text to third-party AI providers (e.g., Google or OpenAI) in accordance with their respective privacy policies.</p>
+                <p><strong>5. Usage Analytics & Telemetry:</strong> To enforce trial limits and improve the software, ShieldDocs collects anonymous usage statistics (such as the number of documents scanned and app launch times). <strong>We do not collect, monitor, or have access to the actual contents of your documents or any sensitive text within them.</strong></p>
+            </div>
+            
+            <div style="display: flex; gap: 15px;">
+                <button id="btn-eula-decline" class="action-btn" style="flex: 1; background: transparent; border: 1px solid var(--input-border); color: var(--text-main);">I Decline</button>
+                <button id="btn-eula-accept" class="action-btn" style="flex: 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">I Accept and Agree</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Up Modal Overlay -->
+    <div id="topup-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 400px; padding: 40px; text-align: center; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <h2 style="margin-bottom: 15px; font-size: 1.8rem;">Top Up Wallet</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem;">Add funds securely via Cashfree to continue using premium AI features.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="action-btn amount-btn" data-amount="100" style="flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main);">₹100</button>
+                <button class="action-btn amount-btn" data-amount="500" style="flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main);">₹500</button>
+                <button class="action-btn amount-btn" data-amount="1000" style="flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main);">₹1000</button>
+            </div>
+            
+            <div style="margin-bottom: 25px; position: relative;">
+                <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600;">₹</span>
+                <input type="number" id="custom-amount-input" placeholder="Custom Amount" min="50" style="width: 100%; padding: 12px 15px 12px 35px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: 'Inter', sans-serif;">
+            </div>
+            
+            <button id="btn-pay-now" class="action-btn" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size: 1.1rem; padding: 12px; margin-bottom: 10px;">Proceed to Pay</button>
+            <button id="btn-cancel-topup" class="action-btn" style="width: 100%; background: transparent; border: 1px solid var(--input-border); color: var(--text-muted);">Cancel</button>
+        </div>
+    </div>
+
+
+    <header style="position: sticky; top: 0; z-index: 10000; background: var(--header-bg, rgba(255, 255, 255, 0.95)); backdrop-filter: blur(16px); padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--glass-border, rgba(0,0,0,0.05)); box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <div class="container" style="position: relative;">
+            <h1 style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0; padding: 0;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="highlight"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                <div style="display: flex; align-items: baseline; white-space: nowrap;">
+                    Shield<span class="highlight">Docs</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 8px;">{{ version }}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; margin-left: 10px; font-weight: 600; vertical-align: middle;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                        DPDP Compliant
+                    </span>
+                </div>
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 5px; text-align: center;">Comprehensive Data Privacy & Document Management Suite · Powered by <span style="color: var(--accent); font-weight: 600;">CA Ajay Gill</span></p>
+            {% if local_ip and local_ip != 'localhost' %}
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; text-align: center;">🌐 Network Access: <span style="font-weight: 600; color: var(--text-main); user-select: all;">http://{{ local_ip }}:5055</span></p>
+            {% endif %}
+            <div style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+                <!-- Compliance Sarthi Logo -->
+                <a href="https://compliancesarthi.in" target="_blank" style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--glass-border); text-decoration: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--glass-border)'" onmouseout="this.style.background='var(--glass-bg)'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span style="font-weight: 700; font-size: 1rem; letter-spacing: -0.5px; color: var(--text-main);">
+                        Compliance<span style="color: #10b981;">Sarthi</span>
+                    </span>
+                </a>
+            </div>
+            
+            <div style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 15px;">
+                <button id="btn-help-header" style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 6px 12px; color: var(--text-main); font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s;" onmouseover="this.style.background='var(--glass-border)'" onmouseout="this.style.background='var(--glass-bg)'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Help
+                </button>
+                
+                <button id="btn-voluntary-login" style="background: #3b82f6; border: 1px solid #2563eb; padding: 6px 12px; color: white; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                    Login
+                </button>
+
+                <!-- User Profile Dropdown -->
+                <div style="position: relative;" id="user-profile-wrapper" class="hidden">
+                    <div id="user-info-container" style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); background: var(--glass-bg); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--glass-border)'" onmouseout="this.style.background='var(--glass-bg)'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <span id="user-email-display"></span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    
+                    <div id="user-dropdown" class="hidden" style="position: absolute; right: 0; top: 100%; margin-top: 8px; background: var(--header-bg); border: 1px solid var(--glass-border); border-radius: 8px; width: 220px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); backdrop-filter: blur(12px); overflow: hidden; z-index: 10001; flex-direction: column;">
+                        <button id="btn-menu-account" style="width: 100%; text-align: left; background: transparent; border: none; padding: 12px 15px; color: var(--text-main); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--glass-border);" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            Account Ledger
+                        </button>
+                        <button id="btn-menu-dictionary" style="width: 100%; text-align: left; background: transparent; border: none; padding: 12px 15px; color: var(--text-main); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            Dictionary Settings
+                        </button>
+                        <button id="btn-menu-logout" style="width: 100%; text-align: left; background: transparent; border: none; padding: 12px 15px; color: #ef4444; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--glass-border);" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Log Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" id="main-app-container" style="padding-top: 1rem;">
+
+        <!-- Main Tool Page (Redact, Restore, etc.) -->
+        <div id="page-main" class="page-container">
+
+        <div class="tabs sidebar-tabs" style="position: sticky; top: 75px; z-index: 9999; margin-bottom: 10px; background: var(--header-bg); backdrop-filter: blur(16px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding-top: 5px; padding-bottom: 5px;">
+            <div style="display: flex; align-items: center; background: rgba(59, 130, 246, 0.12); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.25);">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; margin-right: 5px; margin-left: 5px;">Data Privacy <span style="margin-left: 10px; color: var(--glass-border);">|</span></div>
+                <button class="tab-btn active" data-target="anonymize" data-path="redact" style="margin-right: 5px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Redact
+                </button>
+                <button class="tab-btn" data-target="restore" data-path="restore">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    Restore
+                </button>
+            </div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; margin-left: 10px; margin-right: 5px;"><span style="color: var(--glass-border);">|</span></div>
+            <button class="tab-btn" data-target="extract-data" data-path="extract">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Extract Data
+            </button>
+            <button class="tab-btn" data-target="smart-rename" data-path="smart-rename">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Smart Rename
+            </button>
+            <button class="tab-btn" data-target="merge-pdf" data-path="merge-pdf">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Merge PDF
+            </button>
+            <button class="tab-btn" data-target="split-pdf" data-path="split-pdf">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                Split PDF
+            </button>
+            <button class="tab-btn" data-target="compress-pdf" data-path="compress-pdf">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+                Compress PDF
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+            <div class="alert-banner" style="flex: 1; margin-bottom: 0; padding: 10px 15px;">
+                <div class="alert-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div class="alert-text">
+                    <div class="alert-title">100% on-device processing for redaction</div>
+                    <div class="alert-subtitle">All personal data is redacted locally on your machine. We only send the redacted text to external AI servers if you explicitly choose to use the AI Reply feature. Your original sensitive data never leaves your system.</div>
+                </div>
+            </div>
+
+            <div class="alert-banner" style="flex: 1; margin-bottom: 0; padding: 10px 15px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="alert-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                </div>
+                <div class="alert-text">
+                    <div class="alert-title" style="color: #059669;">Achieve DPDP Act Compliance Automatically</div>
+                    <div class="alert-subtitle">By using ShieldDocs to securely anonymize PII before sharing or processing documents, you ensure your organization complies with the data minimization and privacy mandates of India's Digital Personal Data Protection (DPDP) Act.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar" style="display: none;">
+            </div>
+
+            <div class="glass-panel main-panel" style="padding: 15px 20px;">
+
+                <!-- Anonymize Section -->
+                <div id="anonymize" class="tab-content active">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                        <h2 style="font-size: 1.4rem; margin: 0;">Anonymize a document</h2>
+                        <div class="status-pill">
+                            <span class="status-dot"></span> Processing locally
+                        </div>
+                    </div>
+                    <p class="subtitle" style="font-size: 0.95rem; margin-bottom: 8px;">Replace sensitive names, IDs, and entities with realistic dummy data — fully reversible.</p>
+                    
+                    <div class="format-badges" style="margin-bottom: 8px;">
+                        <span class="badge">PDF</span>
+                        <span class="badge">DOCX</span>
+                        <span class="badge">TXT</span>
+                        <span class="badge">XLSX</span>
+                        <span class="badge">CSV</span>
+                        <span class="badge">JSON</span>
+                        <span class="badge">XML</span>
+                        <span class="badge">JPG/PNG</span>
+                    </div>
+                    
+                    <div class="drop-zone" id="drop-zone-anonymize" style="padding: 25px 20px; min-height: 120px; margin-bottom: 10px; margin-top: 5px; background: rgba(59, 130, 246, 0.04); border: 2px dashed #3b82f6; border-radius: 12px; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(59, 130, 246, 0.08)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.04)'">
+                        <div class="drop-icon-container" style="margin-bottom: 8px; color: #3b82f6;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v8"></path><path d="m9 11 3-3 3 3"></path></svg>
+                        </div>
+                        <span class="drop-text" style="font-size: 1.2rem; font-weight: 600; color: #3b82f6;">Drag & drop your file here</span>
+                        <span class="drop-subtext" style="font-size: 0.9rem; margin-top: 4px;">or <span class="highlight" style="text-decoration: underline;">click to browse</span> from your device</span>
+                        <input type="file" id="file-input-anonymize" hidden multiple accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv,.json,.xml">
+                    </div>
+                    
+                    <div class="file-info hidden" id="file-info-anonymize">
+                        <span class="file-name"></span>
+                        <button class="remove-btn" id="remove-btn-anonymize">✕</button>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            End-to-end secure
+                        </div>
+                        <div class="feature-card">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                            Fully reversible
+                        </div>
+                        <div class="feature-card">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            AI-powered redaction
+                        </div>
+                        <div class="feature-card">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                            No data leaves your system
+                        </div>
+                    </div>
+
+                    <div id="results-wrapper" style="display: flex; gap: 20px; align-items: flex-start; width: 100%;">
+                        <div class="raw-text-container hidden" id="raw-text-container" style="flex: 7; min-width: 0; margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                            <h3>Raw Document Text</h3>
+                            <p class="subtitle" style="font-size:0.9rem;">Select any text below that was missed and click 'Add Selected' to manually redact it. You can also search for text.</p>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; position: sticky; top: 145px; z-index: 10; background: var(--header-bg); backdrop-filter: blur(12px); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-bg); box-shadow: 0 4px 10px var(--input-bg);">
+                                <input type="text" id="search-raw-input" placeholder="Search in text..." style="flex: 1; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--input-border); background: var(--glass-border); color: var(--text-main); font-size: 0.9rem;">
+                                <button class="action-btn" id="btn-search-raw" style="flex: 0 0 auto; margin: 0; padding: 6px 15px; font-size: 0.85rem; height: auto; min-height: 0; width: auto;">Find</button>
+                                <button class="action-btn" id="btn-add-selected" style="flex: 0 0 auto; margin: 0; padding: 6px 15px; font-size: 0.85rem; height: auto; min-height: 0; width: auto; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">Add Selected Text</button>
+                            </div>
+                        
+                        <div id="raw-text" style="width: 100%; min-height: 300px; height: auto; padding: 10px; background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border); border-radius: 8px; font-family: monospace; font-size: 1.1rem; line-height: 1.5; overflow: visible; white-space: pre-wrap; word-wrap: break-word;"></div>
+                        </div>
+
+                        <div class="review-container hidden" id="review-container" style="flex: 3; min-width: 0; margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                            <h3>Review & Edit Suggestions</h3>
+                            <p class="subtitle" style="font-size:0.9rem;">Modify any dummy values before applying.</p>
+                            <div class="review-table-wrapper">
+                                <table class="review-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Approve</th>
+                                            <th>Original Text</th>
+                                            <th>Proposed Dummy Text</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="review-table-body">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="action-btn hidden" id="btn-analyze" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        Analyze document
+                    </button>
+                    <button class="action-btn hidden" id="btn-approve">Approve & Redact</button>
+                    
+                    <div class="progress-container hidden" id="progress-anonymize">
+                        <div class="spinner"></div>
+                        <span>Processing your file securely...</span>
+                    </div>
+
+                    <div class="result-container hidden" id="result-container" style="margin-top: 1.5rem;">
+                        <h3>Redacted Output</h3>
+                        <div id="result-text" style="width: 100%; min-height: 500px; height: auto; padding: 10px; margin-top: 10px; margin-bottom: 10px; background: var(--glass-bg); color: var(--text-main); border: 1px solid var(--glass-border); border-radius: 8px; font-family: monospace; font-size: 1.1rem; line-height: 1.5; overflow: visible; white-space: pre-wrap; word-wrap: break-word;"></div>
+                        
+                        <div id="after-approve-wrapper" style="display: flex; flex-direction: column; gap: 20px; align-items: stretch; width: 100%; margin-top: 1.5rem;">
+                            
+                            <div style="display: flex; gap: 15px; width: 100%;">
+                                <a href="#" id="download-link" class="action-btn" style="flex: 1; text-decoration: none; text-align: center; display: block;">Download Redacted File</a>
+                                <button id="btn-copy-redacted" class="action-btn" style="flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);">Copy Redacted Document</button>
+                            </div>
+                            <p style="font-size: 0.85rem; color: #a1a1aa; text-align: center; margin-top: -10px;"><strong>You can manually use the copied content in any AI like ChatGPT or Anthropic to generate a reply, and the reply can be pasted in <button class="tab-btn" data-target="restore" data-path="restore" style="display: inline-flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; color: #3b82f6; font-weight: bold; cursor: pointer; vertical-align: middle; margin: 0 4px; gap: 4px; line-height: 1.2; text-decoration: none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: text-bottom;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Restore</button> to get the reverted reply based on the AI.</strong></p>
+                            
+                            <!-- AI Reply Hub -->
+                            <div class="ai-reply-container hidden" id="ai-reply-container" style="width: 100%; padding: 15px; background: rgba(0, 200, 255, 0.05); border: 1px solid rgba(0, 200, 255, 0.2); border-radius: 8px;">
+                                <h3>🤖 AI Reply Hub</h3>
+                                <p class="subtitle" style="font-size:0.9rem;">Give a prompt and it will automatically fetch a reply from the AI based on the redacted document. The redacted data will be sent to the AI and personal data is not being sent. The data being sent can be seen in the redacted text column. Therefore verify the data you want to send to AI for reply.</p>
+                                <p style="font-size: 0.85rem; color: #d97706; margin-top: 8px; font-weight: 500; background: rgba(217, 119, 6, 0.1); padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(217, 119, 6, 0.2); display: flex; align-items: flex-start; gap: 8px; line-height: 1.4;">
+                                    <span style="font-size: 1.1rem; line-height: 1;">⚠️</span> 
+                                    <span><strong>Note:</strong> This is a premium feature billed on a pay-as-you-go basis. Usage incurs a nominal fee starting at <strong>15 Paise</strong>, with the final cost dynamically calculated based on the total length of the content processed.</span>
+                                </p>
+                                
+                                <div style="margin-top: 15px;">
+                                    <div style="display: none;">
+                                        <label for="ai-provider" style="display:block; margin-bottom: 5px; font-weight: 500;">AI Provider</label>
+                                        <select id="ai-provider" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--input-border); background: var(--glass-border); color: var(--text-main); margin-bottom: 15px; appearance: auto;">
+                                            <option value="openai" style="color: black;">OpenAI</option>
+                                            <option value="google" style="color: black;">Google Gemini</option>
+                                            <option value="anthropic" style="color: black;">Anthropic Claude</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <label for="ai-prompt" style="display:block; margin-bottom: 5px; font-weight: 500;">Custom Instruction <span style="color: #ef4444;">*</span></label>
+                                    <textarea id="ai-prompt" placeholder="Tip: To get the best output, provide a clear and detailed input!&#10;&#10;Example: &quot;Please review the redacted financial report below and draft a formal email summarizing the key discrepancies in bullet points.&quot;" style="width: 100%; height: 90px; padding: 10px; border-radius: 4px; border: 1px solid var(--input-border); background: var(--glass-border); color: var(--text-main); margin-bottom: 15px; resize: vertical; line-height: 1.4;"></textarea>
+                                    
+                                    <button class="action-btn" id="btn-generate-reply" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Generate AI Reply</button>
+                                    
+                                    <div class="progress-container hidden" id="progress-ai" style="margin-top: 15px;">
+                                        <div class="spinner"></div>
+                                        <span>Generating reply... This may take a few seconds.</span>
+                                    </div>
+                                    
+                                    <div id="ai-result-section" class="hidden" style="margin-top: 20px;">
+                                        <h4 style="margin-bottom: 10px; color: #10b981;">✅ Restored AI Reply</h4>
+                                        <div id="ai-result-text" style="width: 100%; min-height: 500px; height: auto; padding: 10px; background: rgba(16, 185, 129, 0.05); color: var(--text-main); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; font-family: monospace; overflow: visible; white-space: pre-wrap; word-wrap: break-word;"></div>
+                                        
+                                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                            <button class="action-btn" id="btn-copy-reply" style="flex: 1; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main);">📋 Copy Reply</button>
+                                            <button class="action-btn" id="btn-download-reply-pdf" style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">📄 Download as PDF</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restore Section -->
+                <div id="restore" class="tab-content">
+                    <h2>Restore a Document</h2>
+                    <p class="subtitle">Upload the AI's reply file or paste it below.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                        <textarea id="paste-restore-input" placeholder="Paste the AI's reply here..." style="width: 100%; min-height: 150px; padding: 15px; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main); border-radius: 8px; font-family: 'Inter', sans-serif; resize: vertical;"></textarea>
+                        
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">— OR —</div>
+
+                        <div class="drop-zone" id="drop-zone-restore" style="padding: 30px 20px; min-height: 150px; margin-bottom: 15px; margin-top: 10px;">
+                            <span class="drop-icon">🔄</span>
+                            <span class="drop-text">Drag & Drop the AI reply here</span>
+                            <span class="drop-subtext">or click to browse (.docx, .txt)</span>
+                            <input type="file" id="file-input-restore" hidden accept=".docx,.txt">
+                        </div>
+                    </div>
+                    
+                    <div class="file-info hidden" id="file-info-restore">
+                        <span class="file-name"></span>
+                        <button class="remove-btn">✕</button>
+                    </div>
+
+                    <button class="action-btn hidden" id="btn-restore" disabled>Restore & Download</button>
+                    
+                    <div class="progress-container hidden" id="progress-restore">
+                        <div class="spinner"></div>
+                        <span>Restoring original data...</span>
+                    </div>
+
+                    <div id="restore-result-section" class="hidden" style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0;">Restored Content Preview</h3>
+                            <a id="btn-download-restored" href="#" class="action-btn" style="margin: 0; padding: 8px 15px; font-size: 0.9rem; text-decoration: none; display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: auto; height: auto; min-height: 0;">Download File</a>
+                        </div>
+                        <div class="result-box" style="background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 15px; margin-top: 10px;">
+                            <pre id="restore-result-text" style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--text-main); margin: 0;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Rename Section -->
+                <div id="smart-rename" class="tab-content">
+                    <h2>Smart Rename</h2>
+                    <p class="subtitle">Select a local folder and automatically rename all files inside the folder.</p>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <button class="action-btn" id="btn-select-folder" style="margin: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Select Folder</button>
+                    </div>
+                    
+
+                    
+                    <button class="action-btn" id="btn-scan-folder" disabled>Scan Files</button>
+                    
+                    <div class="progress-container hidden" id="progress-smart-rename" style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                        <span id="rename-progress-text">Scanning folder...</span>
+                    </div>
+                    
+                    <div id="rename-results-section" class="hidden" style="margin-top: 20px;">
+                        <h3>Review & Apply Renames</h3>
+                        <p class="subtitle" style="font-size: 0.9rem;">Select the preferred name for each file, then click Apply.</p>
+                        
+                        <div style="overflow-x: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--header-bg); border-bottom: 1px solid var(--glass-border);">
+                                        <th style="padding: 12px; min-width: 150px;">Original Name</th>
+                                        <th style="padding: 12px; min-width: 150px;">Smart Rename</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rename-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <button class="action-btn" id="btn-apply-rename" style="margin-top: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Apply Selected Renames</button>
+                    </div>
+                </div>
+
+                <!-- Extract Data Section -->
+                <div id="extract-data" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h2 style="font-size: 1.6rem; margin: 0;">Extract & Clean Data</h2>
+                        <div class="status-pill">
+                            <span class="status-dot"></span> Processing locally
+                        </div>
+                    </div>
+                    <p class="subtitle" style="font-size: 1rem; margin-bottom: 15px;">Intelligently extract key details (like Name, DOB, IDs) from messy OCR scans.</p>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label for="extract-doc-type" style="display:block; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Select Document Type</label>
+                        <select id="extract-doc-type" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-size: 1rem; appearance: auto;">
+                            <option value="pan" style="color: black;">PAN Card</option>
+                            <option value="aadhaar" style="color: black;">Aadhaar Card</option>
+                            <option value="voter_id" style="color: black;">Voter ID (Coming Soon)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="drop-zone" id="drop-zone-extract" style="padding: 30px 20px; min-height: 150px; margin-bottom: 15px; margin-top: 10px;">
+                        <div class="drop-icon-container">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <span class="drop-text">Drag & drop your file here</span>
+                        <span class="drop-subtext">or <span class="highlight">click to browse</span> from your device</span>
+                        <input type="file" id="file-input-extract" hidden multiple accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.xlsx,.csv,.json,.xml">
+                    </div>
+                    
+                    <div class="file-info hidden" id="file-info-extract">
+                        <span class="file-name"></span>
+                        <button class="remove-btn" id="remove-btn-extract">✕</button>
+                    </div>
+                    
+                    <button class="action-btn hidden" id="btn-extract" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Extract Information
+                    </button>
+                    
+                    <div class="progress-container hidden" id="progress-extract" style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                        <span id="extract-progress-text">Extracting data...</span>
+                    </div>
+                    
+                    <div id="extract-results-section" class="hidden" style="margin-top: 20px;">
+                        <h3>Extracted Information</h3>
+                        <p class="subtitle" style="font-size: 0.9rem;">The system has automatically corrected OCR errors for these values.</p>
+                        
+                        <div style="overflow-x: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: var(--header-bg); border-bottom: 1px solid var(--glass-border);">
+                                        <th style="padding: 12px; min-width: 120px;">File Name</th>
+                                        <th style="padding: 12px; min-width: 120px;">Entity Type</th>
+                                        <th style="padding: 12px; min-width: 150px;">Extracted Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extract-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merge PDF Section -->
+                <div id="merge-pdf" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h2 style="font-size: 1.6rem; margin: 0;">Merge PDFs</h2>
+                        <div class="status-pill">
+                            <span class="status-dot"></span> Processing locally
+                        </div>
+                    </div>
+                    <p class="subtitle" style="font-size: 1rem; margin-bottom: 15px;">Combine multiple PDFs into a single file. Drag files to reorder them before merging.</p>
+                    
+                    <div class="drop-zone" id="drop-zone-merge" style="padding: 30px 20px; min-height: 150px; margin-bottom: 15px; margin-top: 10px;">
+                        <div class="drop-icon-container">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                        </div>
+                        <span class="drop-text">Drag & drop PDF files here</span>
+                        <span class="drop-subtext">or <span class="highlight">click to browse</span></span>
+                        <input type="file" id="file-input-merge" hidden multiple accept=".pdf">
+                    </div>
+                    
+                    <div id="merge-file-list" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Files will be listed here -->
+                    </div>
+                    
+                    <button class="action-btn hidden" id="btn-merge" disabled>
+                        Merge & Download
+                    </button>
+                    
+                    <div class="progress-container hidden" id="progress-merge" style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                        <span>Merging PDFs...</span>
+                    </div>
+                </div>
+
+                <!-- Split & Resequence PDF Section -->
+                <div id="split-pdf" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h2 style="font-size: 1.6rem; margin: 0;">Split & Resequence PDF</h2>
+                        <div class="status-pill">
+                            <span class="status-dot"></span> Processing locally
+                        </div>
+                    </div>
+                    <p class="subtitle" style="font-size: 1rem; margin-bottom: 15px;">Extract specific pages or reorder them. E.g., '1,3,4-6,2' to keep and reorder those pages.</p>
+                    
+                    <div class="drop-zone" id="drop-zone-split" style="padding: 30px 20px; min-height: 150px; margin-bottom: 15px; margin-top: 10px;">
+                        <div class="drop-icon-container">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                        </div>
+                        <span class="drop-text">Drag & drop a PDF file here</span>
+                        <span class="drop-subtext">or <span class="highlight">click to browse</span></span>
+                        <input type="file" id="file-input-split" hidden accept=".pdf">
+                    </div>
+                    
+                    <div class="file-info hidden" id="file-info-split">
+                        <span class="file-name"></span>
+                        <button class="remove-btn" id="remove-btn-split">✕</button>
+                    </div>
+
+                    <div id="split-options" class="hidden" style="margin-bottom: 15px;">
+                        <label for="split-sequence" style="display:block; margin-bottom: 8px; font-weight: 600; color: var(--text-main);">Page Sequence (1-indexed)</label>
+                        <input type="text" id="split-sequence" placeholder="e.g., 1,3,5-10,2" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-size: 1rem;">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Use commas to separate pages and dashes for ranges. Leave empty to fail.</p>
+                    </div>
+                    
+                    <button class="action-btn hidden" id="btn-split" disabled>
+                        Process & Download
+                    </button>
+                    
+                    <div class="progress-container hidden" id="progress-split" style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                        <span>Processing PDF...</span>
+                    </div>
+                </div>
+
+                <!-- Compress PDF Section -->
+                <div id="compress-pdf" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h2 style="font-size: 1.6rem; margin: 0;">Compress PDF</h2>
+                        <div class="status-pill">
+                            <span class="status-dot"></span> Processing locally
+                        </div>
+                    </div>
+                    <p class="subtitle" style="font-size: 1rem; margin-bottom: 15px;">Reduce the size of a PDF file drastically while maintaining visual quality.</p>
+                    
+                    <div class="drop-zone" id="drop-zone-compress" style="padding: 30px 20px; min-height: 150px; margin-bottom: 15px; margin-top: 10px;">
+                        <div class="drop-icon-container">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                        </div>
+                        <span class="drop-text">Drag & drop a PDF file here</span>
+                        <span class="drop-subtext">or <span class="highlight">click to browse</span></span>
+                        <input type="file" id="file-input-compress" hidden accept=".pdf">
+                    </div>
+                    
+                    <div class="file-info hidden" id="file-info-compress">
+                        <span class="file-name"></span>
+                        <button class="remove-btn" id="remove-btn-compress">✕</button>
+                    </div>
+
+                    <button class="action-btn hidden" id="btn-compress" disabled>
+                        Compress & Download
+                    </button>
+                    
+                    <div class="progress-container hidden" id="progress-compress" style="margin-top: 15px;">
+                        <div class="spinner"></div>
+                        <span>Compressing PDF...</span>
+                    </div>
+                </div>
+
+                <!-- Coming Soon Section -->
+                <div id="coming-soon" class="tab-content">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; min-height: 400px; background: rgba(255,255,255,0.02); border-radius: 12px; margin-top: 10px; border: 1px dashed var(--glass-border);">
+                        <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 50%; margin-bottom: 25px; box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <h2 style="font-size: 2.2rem; margin-bottom: 15px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Coming Soon</h2>
+                        <p class="subtitle" style="font-size: 1.1rem; max-width: 450px; margin: 0 auto; color: var(--text-muted); line-height: 1.6;">We're working hard on bringing you this feature. Stay tuned for future updates and more capabilities!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- end page-main -->
+    </div> <!-- end main-app-container -->
+
+    <!-- Account Ledger Overlay -->
+    <div id="page-account" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 450px; padding: 25px; text-align: left; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-height: 85vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="highlight"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    Account Ledger
+                </h2>
+                <button id="btn-close-account" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;" title="Close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div style="background: var(--input-bg); border-radius: 12px; border: 1px solid var(--glass-border); padding: 15px; margin-bottom: 15px;">
+                <div id="wallet-container" class="hidden" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                        <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 500;">Available Balance</span>
+                    </div>
+                    <span style="font-weight: 700; color: #10b981; font-size: 1.2rem;">₹<span id="wallet-balance">0.00</span></span>
+                </div>
+                <button id="btn-open-topup" class="action-btn" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin: 0; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">+ Add Money</button>
+            </div>
+            
+            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px;">Recent Transactions</h3>
+            <div id="transactions-list" style="flex: 1; overflow-y: auto; background: transparent; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+                <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">Loading transactions...</div>
+            </div>
+            
+            <button id="btn-signout" class="action-btn" style="width: 100%; background: transparent; border: 1px solid #ef4444; color: #ef4444; transition: background 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Dictionary Settings Overlay -->
+    <div id="page-dictionary" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 600px; padding: 30px; text-align: left; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="highlight"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    Custom Dictionary & Rules
+                </h2>
+                <button id="btn-close-dictionary" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer;" title="Close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; padding-right: 10px;">
+                <h3 style="margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px;">Permanent Words</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Specific words, names, or companies that will always be completely pseudo-anonymized automatically.</p>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="custom-word-input" placeholder="e.g. Acme Corp" style="flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main);">
+                    <button id="btn-add-word" class="action-btn" style="background: var(--glass-border); border: 1px solid var(--input-border); padding: 0 20px;">Add</button>
+                </div>
+                <div id="custom-words-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px;">
+                    <!-- Words will be rendered here -->
+                </div>
+
+                <h3 style="margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px;">Custom Regex Rules</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Advanced: Define regular expressions to catch specific ID formats. For example, \bEMP-\d{4}\b</p>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="regex-name-input" placeholder="Rule Name (e.g. Emp ID)" style="width: 150px; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main);">
+                    <input type="text" id="regex-pattern-input" placeholder="Regex Pattern" style="flex: 1; padding: 10px 15px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-family: monospace;">
+                    <button id="btn-add-regex" class="action-btn" style="background: var(--glass-border); border: 1px solid var(--input-border); padding: 0 20px;">Add</button>
+                </div>
+                <div id="custom-regex-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                    <!-- Regexes will be rendered here -->
+                </div>
+            </div>
+            
+            <button id="btn-save-dictionary" class="action-btn" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 20px;">Save & Apply Rules</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Help Modal Overlay -->
+    <div id="help-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(248, 250, 252, 0.98); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(20px);">
+        <div class="glass-panel" style="width: 100%; max-width: 650px; padding: 40px; text-align: left; border: 1px solid var(--glass-border); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.8rem; margin: 0;">Shield<span class="highlight">Docs</span> Help & Guide</h2>
+                <button id="btn-close-help" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--glass-border); font-size: 0.95rem; color: var(--text-main); line-height: 1.6;">
+                <h3 style="margin-top: 0; color: var(--accent); border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">🌐 Running on the Network</h3>
+                <p>ShieldDocs can be accessed from any computer on your local office network without needing to install it on each machine.</p>
+                <p>Simply open a web browser on another computer and enter this URL:</p>
+                <div style="background: var(--glass-border); padding: 10px; border-radius: 6px; text-align: center; font-family: monospace; font-size: 1.2rem; font-weight: bold; margin: 15px 0; border: 1px solid var(--input-border); color: #10b981;">http://&lt;SERVER_NAME&gt;:5055</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);"><em>Note: If you have issues, you can also use this computer's local IP address (e.g., http://192.168.1.10:5055). Ensure your firewall allows inbound connections on port 5055.</em></p>
+
+                <h3 style="margin-top: 25px; color: var(--accent); border-bottom: 1px solid var(--glass-border); padding-bottom: 8px;">🛡️ How to use the Redaction Feature</h3>
+                
+                <p style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem;">
+                    <strong>Privacy Guarantee:</strong> The local AI works entirely on your system. No data or document contents are ever sent to any third party. You can verify this by disconnecting your system from the internet and trying it out yourself!
+                </p>
+
+                <ol style="padding-left: 20px; margin-bottom: 0;">
+                    <li style="margin-bottom: 10px;"><strong>Upload Document:</strong> Go to the "Redact" tab and drag-and-drop your file (PDF, Image, Word, TXT, etc.) into the designated area.</li>
+                    <li style="margin-bottom: 10px;"><strong>Analyze:</strong> Click the "Analyze document" button. The local AI will automatically scan your document for sensitive information like names, IDs, dates, and amounts.</li>
+                    <li style="margin-bottom: 10px;"><strong>Review & Edit:</strong> You will see a table of suggested redactions. The AI replaces real data with realistic dummy data. You can review and modify the dummy text if needed.</li>
+                    <li style="margin-bottom: 10px;"><strong>Manual Selection:</strong> If the AI missed anything, scroll to the "Raw Document Text" section. Select the sensitive text with your mouse and click "Add Selected Text" to redact it.</li>
+                    <li><strong>Approve:</strong> Click "Approve & Redact" to generate the final anonymized document. You can download the redacted file securely.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <div id="global-loading-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="spinner" style="width: 60px; height: 60px; border-width: 6px; margin-bottom: 30px; border-top-color: var(--accent);"></div>
+        <h2 style="font-size: 1.8rem; color: var(--text-main); margin-bottom: 15px;">Processing Document...</h2>
+        <p id="global-loading-text" style="font-size: 1.2rem; color: var(--text-muted); max-width: 500px; text-align: center; line-height: 1.5; transition: opacity 0.5s ease;"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, getIdToken, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAp549hAUgaz2cyjb10YHe3Lcyc613ato",
+            authDomain: "shielddocs-1f6cd.firebaseapp.com",
+            projectId: "shielddocs-1f6cd",
+            storageBucket: "shielddocs-1f6cd.firebasestorage.app",
+            messagingSenderId: "110348552958",
+            appId: "1:110348552958:web:6732521a5251408b91f3af"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Expose to window for main.js to use
+        window.firebaseApp = {
+            auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+            GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInWithCustomToken,
+            db, doc, getDoc, setDoc, updateDoc, increment, onSnapshot, collection, query, where, getDocs,
+            getFunctions, httpsCallable
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=18"></script>
+</body>
+</html>

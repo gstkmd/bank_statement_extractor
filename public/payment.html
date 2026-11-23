@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment Portal</title>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f7fafc; color: #1a202c; text-align: center; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; width: 90%; }
+        h1 { margin-top: 0; color: #2d3748; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: #3182ce; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #status-message { font-weight: 500; margin-bottom: 20px; }
+        .success-icon { color: #48bb78; font-size: 48px; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div id="success-icon" class="success-icon">✓</div>
+        <h1>Secure Checkout</h1>
+        <div id="loading-spinner" class="spinner"></div>
+        <p id="status-message">Initializing secure payment gateway...</p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const statusMsg = document.getElementById('status-message');
+        const spinner = document.getElementById('loading-spinner');
+        const successIcon = document.getElementById('success-icon');
+
+        if (!sessionId) {
+            statusMsg.textContent = "Error: Invalid payment session.";
+            spinner.style.display = "none";
+        } else {
+            const cashfreeObj = Cashfree({ mode: "production" });
+            
+            cashfreeObj.checkout({
+                paymentSessionId: sessionId,
+                redirectTarget: "_modal",
+            }).then((result) => {
+                spinner.style.display = "none";
+                if(result.error) {
+                    statusMsg.textContent = "Payment Error: " + result.error.message;
+                    statusMsg.style.color = "#e53e3e";
+                }
+                if(result.redirect) {
+                    statusMsg.textContent = "Redirecting...";
+                }
+                if(result.paymentDetails) {
+                    successIcon.style.display = "block";
+                    statusMsg.textContent = "Payment Completed Successfully! You can safely close this window and return to ShieldDocs.";
+                    statusMsg.style.color = "#38a169";
+                }
+            }).catch((err) => {
+                spinner.style.display = "none";
+                statusMsg.textContent = "Error: " + err.message;
+            });
+        }
+    </script>
+</body>
+</html>

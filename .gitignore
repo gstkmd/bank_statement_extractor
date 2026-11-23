@@ -1,3 +1,6 @@
+# JavaScript / Node.js
+node_modules/
+
 # Python virtual environment
 .venv/
 
@@ -29,8 +32,25 @@ data/output/**/*.csv
 !data/statements/
 !data/output/
 
-# Don't commit my personal config file
+# Don't commit personal config files and secrets
 config.yml
+client_secret.json
+firebase-adminsdk.json
+.firebase/
+
+# Build and packaging output
+build/
+dist/
+obfuscated_src/
+*.spec
+
+# Logs
+*.log
+*.tmp
+New Text Document.txt
+
+# Data and input/output
+data/
 
 # unfinished script to help with OCR coordinate configuration
 get_coords.py
