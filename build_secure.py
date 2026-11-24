@@ -194,6 +194,8 @@ def main():
         '--collect-all google '
         '--collect-all en_core_web_lg '
         '--hidden-import en_core_web_lg '
+        '--collect-all en_core_web_sm '
+        '--hidden-import en_core_web_sm '
         f'{runtime_pkg_args}'
         f'{hidden_import_args} '
         'app.py'

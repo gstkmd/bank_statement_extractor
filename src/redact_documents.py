@@ -41,6 +41,8 @@ def load_custom_rules():
     return {"words": [], "regexes": []}
 def setup_analyzer():
     from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern, EntityRecognizer, RecognizerResult
+    from presidio_analyzer.nlp_engine import NlpEngineProvider
+    import spacy
 
     class CaseSensitiveCompanyRecognizer(EntityRecognizer):
         def __init__(self):
@@ -57,7 +59,28 @@ def setup_analyzer():
                 ))
             return results
 
-    analyzer = AnalyzerEngine()
+    # Prefer local offline models without attempting network download
+    model_name = "en_core_web_lg"
+    try:
+        spacy.load(model_name)
+    except Exception:
+        try:
+            spacy.load("en_core_web_sm")
+            model_name = "en_core_web_sm"
+        except Exception:
+            pass
+
+    try:
+        nlp_config = {
+            "nlp_engine_name": "spacy",
+            "models": [{"lang_code": "en", "model_name": model_name}]
+        }
+        provider = NlpEngineProvider(nlp_configuration=nlp_config)
+        nlp_engine = provider.create_engine()
+        analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
+    except Exception as e:
+        print(f"Fallback AnalyzerEngine initialization: {e}")
+        analyzer = AnalyzerEngine()
     custom_rules = load_custom_rules()
     if custom_rules.get("words"):
         escaped_words = [re.escape(w.strip()) for w in custom_rules["words"] if w.strip()]
